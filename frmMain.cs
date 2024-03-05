@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO.Ports;
+using System.Net;
+using System.Net.Mail;
 using System.Threading;
 using System.Timers;
 using System.Windows.Forms;
@@ -12,7 +16,11 @@ namespace ArduinoOTP
         System.Timers.Timer aTimer;
         Random random = new Random();
         SerialPort serialPort;
+        ArrayList numbers = new ArrayList() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        Queue<string> otpQueue = new Queue<string>();
+
         int counter;
+        string otpNumber = "";
 
         public frmMain()
         {
@@ -22,6 +30,9 @@ namespace ArduinoOTP
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            frmLocation frm = new frmLocation();
+            frm.Show();
+
             serialPort = new SerialPort();
             serialPort.BaudRate = 9600;
 
@@ -62,12 +73,28 @@ namespace ArduinoOTP
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            counter = 120;
-            lblNum.Text = (random.Next(100000, 999999)).ToString();
-            serialPort.Write(lblNum.Text.ToString());
+            btnStart.Enabled = false;
+            counter = 60;
 
+            otpNumber = GenerateNumber();
+            serialPort.Write(otpNumber);
+            Mail();
             SetTimer();
             SerialReceive();
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            frmLocation frm = new frmLocation();
+            frm.Show();
+        }
+
+        private void btnQR_Click(object sender, EventArgs e)
+        {
+            frmQR frm = new frmQR();
+            frm.Show();
+            btnNext.Visible = true;
         }
 
         public void SetTimer()
@@ -90,7 +117,8 @@ namespace ArduinoOTP
             if (counter == 0)
             {
                 aTimer.Stop();
-                lblNum.Text = "BOOOOMM!!";
+                lblCountdown.Text = "BOOOOMM!!";
+                btnStart.Enabled = true;
             }
         }
 
@@ -106,12 +134,17 @@ namespace ArduinoOTP
 
                     if (dato == "1")
                     {
-                        imgRandomCode.Image = Image.FromFile("tick.png");
-                        MessageBox.Show("Correct");
+                        aTimer.Stop();
+                        btnNext.Invoke((MethodInvoker)delegate
+                        {
+                            btnQR.Visible = true;
+                        });
                     }
                     else
                     {
-                        imgRandomCode.Image = Image.FromFile("error.png");
+                        aTimer.Stop();
+                        lblCountdown.Text = "Incorrect Pass";
+                        btnStart.Enabled = true;
                     }
                 }                
             }
@@ -121,20 +154,51 @@ namespace ArduinoOTP
             }
         }
 
+        private void Mail()
+        {
+            string strUser = "darkcore.g2@gmail.com";
+            string strPassword = "qewqluzictxdouhq";
+            string host = "smtp.gmail.com";
+            int port = 587;
+
+            SmtpClient client = new SmtpClient(host, port)
+            {
+                Credentials = new NetworkCredential(strUser, strPassword),
+                EnableSsl = true
+            };
+
+            MailMessage mail = new MailMessage();
+            mail.From = new MailAddress("darkcore.g2@gmail.com");
+            mail.To.Add("raul.exposito@sarria.salesians.cat");
+            mail.Subject = "OTP Arduino Random";
+            mail.Body = otpNumber;
+            client.Send(mail);
+        }
+
+        private string GenerateNumber()
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                int index = random.Next(0, (numbers.Count - 1));
+
+                otpQueue.Enqueue(numbers[index].ToString());
+                numbers.RemoveAt(index);
+            }
+
+            while (otpQueue.Count > 0)
+            {
+                otpNumber += otpQueue.Dequeue();
+            }
+
+            otpNumber = otpNumber.PadLeft(6, '0');
+
+            return otpNumber;
+        }
+
         private void SerialReceive()
         {
             Thread filEscolta = new Thread(ReceiveData);
             filEscolta.Start();
-        }
-
-        private void CheckCodeArduino()
-        {
-
-        }
-        
-        private void btnCheck_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }
