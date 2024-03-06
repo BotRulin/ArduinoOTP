@@ -84,5 +84,25 @@ namespace ArduinoOTP
                 }
             }
         }
+
+        private void pnlCamera_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void txtQRCode_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void imgQR_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblQRCode_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

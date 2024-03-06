@@ -57,6 +57,7 @@ namespace ArduinoOTP
             this.lblQRCode.Size = new System.Drawing.Size(317, 30);
             this.lblQRCode.TabIndex = 0;
             this.lblQRCode.Text = "Enter the username:";
+            this.lblQRCode.Click += new System.EventHandler(this.lblQRCode_Click);
             // 
             // imgQR
             // 
@@ -67,6 +68,7 @@ namespace ArduinoOTP
             this.imgQR.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgQR.TabIndex = 2;
             this.imgQR.TabStop = false;
+            this.imgQR.Click += new System.EventHandler(this.imgQR_Click);
             // 
             // txtQRCode
             // 
@@ -75,6 +77,7 @@ namespace ArduinoOTP
             this.txtQRCode.Name = "txtQRCode";
             this.txtQRCode.Size = new System.Drawing.Size(157, 42);
             this.txtQRCode.TabIndex = 3;
+            this.txtQRCode.TextChanged += new System.EventHandler(this.txtQRCode_TextChanged);
             // 
             // btnGenerateQR
             // 
@@ -159,6 +162,7 @@ namespace ArduinoOTP
             this.pnlCamera.Size = new System.Drawing.Size(418, 489);
             this.pnlCamera.TabIndex = 13;
             this.pnlCamera.Visible = false;
+            this.pnlCamera.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlCamera_Paint);
             // 
             // btnNext
             // 
