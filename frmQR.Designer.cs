@@ -32,7 +32,7 @@ namespace ArduinoOTP
             this.components = new System.ComponentModel.Container();
             this.lblQRCode = new System.Windows.Forms.Label();
             this.imgQR = new System.Windows.Forms.PictureBox();
-            this.txtQRCode = new System.Windows.Forms.TextBox();
+            this.txtUsername = new System.Windows.Forms.TextBox();
             this.btnGenerateQR = new System.Windows.Forms.Button();
             this.btnScan = new System.Windows.Forms.Button();
             this.lblScan = new System.Windows.Forms.Label();
@@ -43,6 +43,8 @@ namespace ArduinoOTP
             this.pnlCamera = new System.Windows.Forms.Panel();
             this.btnNext = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.txtCodeChain = new System.Windows.Forms.RichTextBox();
+            this.txtUserDesc = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.imgQR)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgScanQR)).BeginInit();
             this.pnlCamera.SuspendLayout();
@@ -57,32 +59,30 @@ namespace ArduinoOTP
             this.lblQRCode.Size = new System.Drawing.Size(317, 30);
             this.lblQRCode.TabIndex = 0;
             this.lblQRCode.Text = "Enter the username:";
-            this.lblQRCode.Click += new System.EventHandler(this.lblQRCode_Click);
             // 
             // imgQR
             // 
             this.imgQR.BackColor = System.Drawing.Color.PaleGoldenrod;
-            this.imgQR.Location = new System.Drawing.Point(32, 133);
+            this.imgQR.Location = new System.Drawing.Point(32, 270);
             this.imgQR.Name = "imgQR";
-            this.imgQR.Size = new System.Drawing.Size(293, 317);
+            this.imgQR.Size = new System.Drawing.Size(447, 180);
             this.imgQR.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgQR.TabIndex = 2;
             this.imgQR.TabStop = false;
-            this.imgQR.Click += new System.EventHandler(this.imgQR_Click);
             // 
-            // txtQRCode
+            // txtUsername
             // 
-            this.txtQRCode.Location = new System.Drawing.Point(32, 75);
-            this.txtQRCode.Multiline = true;
-            this.txtQRCode.Name = "txtQRCode";
-            this.txtQRCode.Size = new System.Drawing.Size(157, 42);
-            this.txtQRCode.TabIndex = 3;
-            this.txtQRCode.TextChanged += new System.EventHandler(this.txtQRCode_TextChanged);
+            this.txtUsername.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
+            this.txtUsername.Location = new System.Drawing.Point(32, 80);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(157, 32);
+            this.txtUsername.TabIndex = 3;
+            this.txtUsername.Validating += new System.ComponentModel.CancelEventHandler(this.txtQRCode_Validating);
             // 
             // btnGenerateQR
             // 
             this.btnGenerateQR.Font = new System.Drawing.Font("Courier New", 15F);
-            this.btnGenerateQR.Location = new System.Drawing.Point(208, 75);
+            this.btnGenerateQR.Location = new System.Drawing.Point(362, 75);
             this.btnGenerateQR.Name = "btnGenerateQR";
             this.btnGenerateQR.Size = new System.Drawing.Size(117, 42);
             this.btnGenerateQR.TabIndex = 6;
@@ -93,7 +93,7 @@ namespace ArduinoOTP
             // btnScan
             // 
             this.btnScan.Font = new System.Drawing.Font("Courier New", 15F);
-            this.btnScan.Location = new System.Drawing.Point(208, 456);
+            this.btnScan.Location = new System.Drawing.Point(362, 456);
             this.btnScan.Name = "btnScan";
             this.btnScan.Size = new System.Drawing.Size(117, 42);
             this.btnScan.TabIndex = 7;
@@ -157,12 +157,11 @@ namespace ArduinoOTP
             this.pnlCamera.Controls.Add(this.btnCamera);
             this.pnlCamera.Controls.Add(this.imgScanQR);
             this.pnlCamera.Controls.Add(this.cmbCameras);
-            this.pnlCamera.Location = new System.Drawing.Point(390, 30);
+            this.pnlCamera.Location = new System.Drawing.Point(532, 30);
             this.pnlCamera.Name = "pnlCamera";
             this.pnlCamera.Size = new System.Drawing.Size(418, 489);
             this.pnlCamera.TabIndex = 13;
             this.pnlCamera.Visible = false;
-            this.pnlCamera.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlCamera_Paint);
             // 
             // btnNext
             // 
@@ -180,16 +179,35 @@ namespace ArduinoOTP
             this.timer1.Interval = 1000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // txtCodeChain
+            // 
+            this.txtCodeChain.Location = new System.Drawing.Point(32, 133);
+            this.txtCodeChain.Name = "txtCodeChain";
+            this.txtCodeChain.Size = new System.Drawing.Size(447, 110);
+            this.txtCodeChain.TabIndex = 14;
+            this.txtCodeChain.Text = "";
+            // 
+            // txtUserDesc
+            // 
+            this.txtUserDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
+            this.txtUserDesc.Location = new System.Drawing.Point(195, 79);
+            this.txtUserDesc.Name = "txtUserDesc";
+            this.txtUserDesc.ReadOnly = true;
+            this.txtUserDesc.Size = new System.Drawing.Size(157, 32);
+            this.txtUserDesc.TabIndex = 15;
+            // 
             // frmQR
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(242)))), ((int)(((byte)(154)))));
-            this.ClientSize = new System.Drawing.Size(869, 781);
+            this.ClientSize = new System.Drawing.Size(1515, 781);
+            this.Controls.Add(this.txtUserDesc);
+            this.Controls.Add(this.txtCodeChain);
             this.Controls.Add(this.pnlCamera);
             this.Controls.Add(this.btnScan);
             this.Controls.Add(this.btnGenerateQR);
-            this.Controls.Add(this.txtQRCode);
+            this.Controls.Add(this.txtUsername);
             this.Controls.Add(this.imgQR);
             this.Controls.Add(this.lblQRCode);
             this.Name = "frmQR";
@@ -207,7 +225,7 @@ namespace ArduinoOTP
 
         private System.Windows.Forms.Label lblQRCode;
         private System.Windows.Forms.PictureBox imgQR;
-        private System.Windows.Forms.TextBox txtQRCode;
+        private System.Windows.Forms.TextBox txtUsername;
         private System.Windows.Forms.Button btnGenerateQR;
         private System.Windows.Forms.Button btnScan;
         private System.Windows.Forms.Label lblScan;
@@ -218,5 +236,7 @@ namespace ArduinoOTP
         private System.Windows.Forms.Panel pnlCamera;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.RichTextBox txtCodeChain;
+        private System.Windows.Forms.TextBox txtUserDesc;
     }
 }

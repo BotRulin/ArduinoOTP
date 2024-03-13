@@ -12,6 +12,8 @@ using ZXing;
 using AForge.Video;
 using AForge.Video.DirectShow;
 using QRCoder;
+using System.Data;
+using Utils;
 
 namespace ArduinoOTP
 {
@@ -27,11 +29,6 @@ namespace ArduinoOTP
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            //frmLocation frm = new frmLocation();
-            //frm.Show();
-            //btnNext.Visible = true;
-            btnQR.Visible = true;
-
             serialPort = new SerialPort();
             serialPort.BaudRate = 9600;
 
@@ -49,13 +46,16 @@ namespace ArduinoOTP
             }
         }
 
-        private void btnNext_Click(object sender, EventArgs e)
+        private void btnCheck_Click(object sender, EventArgs e)
         {
-            //this.Hide();
-            //frmLocation frm = new frmLocation();
-            //frm.Show();
-
-            pnlCoor.Visible = true;
+            if (txtUserCoord.Text == txtCoord.Text)
+            {
+                MessageBox.Show("Congrats you disable the bomb :)");
+            }
+            else
+            {
+                MessageBox.Show("You failed! :(");
+            }
         }
 
         #region "Panel OTP"
@@ -80,7 +80,6 @@ namespace ArduinoOTP
                 MessageBox.Show("Selecciona un puerto COM válido.");
             }
         }
-
         private void btnStart_Click(object sender, EventArgs e)
         {
             btnStart.Enabled = false;
@@ -94,9 +93,6 @@ namespace ArduinoOTP
         }
         private void btnQR_Click(object sender, EventArgs e)
         {
-            //frmQR frm = new frmQR();
-            //frm.Show();
-
             pnlQR.Visible = true;
         }
 
@@ -120,7 +116,7 @@ namespace ArduinoOTP
                     if (dato == "1")
                     {
                         aTimer.Stop();
-                        btnNext.Invoke((MethodInvoker)delegate
+                        btnCheck.Invoke((MethodInvoker)delegate
                         {
                             btnQR.Visible = true;
                         });
@@ -190,6 +186,9 @@ namespace ArduinoOTP
         #region "Panel QR"
         FilterInfoCollection filterInfoCollection;
         VideoCaptureDevice captureDevice;
+        bbdd bbddDatos = new bbdd();
+        DataSet dtsUsers = new DataSet();
+        DataSet dtsCodeChain = new DataSet();
 
         private void btnScan_Click(object sender, EventArgs e)
         {
@@ -197,21 +196,27 @@ namespace ArduinoOTP
             filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             foreach (FilterInfo filterInfo in filterInfoCollection)
             {
-                cmbCameras.Items.Add(filterInfoCollection);
+                cmbCameras.Items.Add(filterInfo);
             }
 
-            cmbCameras.SelectedIndex = 0;
+            cmbCameras.SelectedIndex = -1;
         }
 
         private void btnGenerateQR_Click(object sender, EventArgs e)
         {
             QRCodeGenerator qr = new QRCodeGenerator();
-            QRCodeData data = qr.CreateQrCode(txtQRCode.Text, QRCodeGenerator.ECCLevel.Q);
+            QRCodeData data = qr.CreateQrCode(txtCodeChain.Text, QRCodeGenerator.ECCLevel.Q);
+
+            foreach (DataRow row in dtsCodeChain.Tables[0].Rows)
+            {
+                row["CodeChain"] = txtCodeChain.Text;
+            }
+
             QRCode code = new QRCode(data);
             imgQR.Image = code.GetGraphic(5);
         }
 
-        private void btnCamera_Click(object sender, EventArgs e)
+        private void btnEnable_Click(object sender, EventArgs e)
         {
             captureDevice = new VideoCaptureDevice(filterInfoCollection[cmbCameras.SelectedIndex].MonikerString);
             captureDevice.NewFrame += CaptureDevice_NewFrame;
@@ -230,6 +235,30 @@ namespace ArduinoOTP
             pnlCoor.Visible = true;
         }
 
+        private void txtUserName_Validating(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            dtsUsers = bbddDatos.PortarPerConsulta($"SELECT descUser FROM Users u WHERE '{txtUserName.Text.ToUpper()}' = UPPER(u.codeUser);");
+            dtsCodeChain = bbddDatos.PortarPerConsulta($"SELECT * FROM CodeChain c WHERE c.idUser = (SELECT u.idUser FROM Users u WHERE '{txtUserName.Text.ToUpper()}' = UPPER(u.codeUser));");
+
+            if (dtsUsers.Tables[0].Rows.Count > 0 || dtsCodeChain.Tables[0].Rows.Count > 0)
+            {
+                foreach (DataRow row in dtsUsers.Tables[0].Rows)
+                {
+                    txtUserDesc.Text = row["descUser"].ToString();
+                    
+                }
+                foreach (DataRow row in dtsCodeChain.Tables[0].Rows)
+                {
+                    txtCodeChain.Text = row["CodeChain"].ToString();
+                }
+            }
+            else
+            {
+                txtUserDesc.Text = "";
+                txtCodeChain.Text = "";
+            }
+        }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             if (imgScanQR.Image != null)
@@ -245,6 +274,19 @@ namespace ArduinoOTP
                     {
                         captureDevice.Stop();
                     }
+
+
+                    DataSet dtsResult = bbddDatos.PortarPerConsulta($"SELECT * FROM CodeChain c WHERE c.idUser = (SELECT u.idUser FROM Users u WHERE '{txtUserName.Text.ToUpper()}' = UPPER(u.codeUser));");
+                    foreach (DataRow row in dtsResult.Tables[0].Rows)
+                    {
+                        if (txtValueQR.Text == row["CodeChain"].ToString())
+                        {
+                            //Terminar esto
+                            btnNextQR.Visible = true;
+                            btnEnable.Enabled = false;
+                        }
+                    }
+
                 }
             }
         }
@@ -278,14 +320,17 @@ namespace ArduinoOTP
         {
             imgScanQR.Image = (Bitmap)eventArgs.Frame.Clone();
         }
+
+        
+
         #endregion
 
         #region "Panel Coordenades"
-
         Dictionary<string, int> coordenades = new Dictionary<string, int>();
         HashSet<int> valorsUtilitzats = new HashSet<int>();
         Random rand = new Random();
         char[] lletres = { 'A', 'B', 'C', 'D' };
+        //char[] nums = { '1', '2', '3', '4', '5'};
         string coordenada;
 
         private void btnGenerate_Click(object sender, EventArgs e)
@@ -328,12 +373,14 @@ namespace ArduinoOTP
                 }
             }
 
-            coordenada = "D3";
+            coordenada = lletres[rand.Next(0, 3)].ToString() + numbers[rand.Next(0, 4)].ToString();
+            lblCoord.Text = $"Coordenada: {coordenada}";
             txtCoord.Text = coordenades[coordenada].ToString().PadLeft(4, '0');
         }
 
         private void GenerarCoordenades()
         {
+            bbddDatos.Executa($"DELETE FROM AdminCoordinates");
             coordenades.Clear();
 
             foreach (char lletra in lletres)
@@ -346,13 +393,22 @@ namespace ArduinoOTP
                         valor = rand.Next(10000);
                     } while (valorsUtilitzats.Contains(valor));
 
-                    valorsUtilitzats.Add(valor);
-
                     coordenada = $"{lletra}{i}";
                     coordenades.Add(coordenada, valor);
                 }
             }
+
+            DataSet dtsCoord =  bbddDatos.PortarTaula("AdminCoordinates");
+            foreach (var item in coordenades)
+            {
+                DataRow dr = dtsCoord.Tables[0].NewRow();
+                dr[1] = item.Key;
+                dr[2] = item.Value;
+                dtsCoord.Tables[0].Rows.Add(dr);
+            }
+            bbddDatos.Actualitzar("select * from AdminCoordinates", dtsCoord);
         }
+
         #endregion
     }
 }

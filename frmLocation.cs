@@ -74,7 +74,7 @@ namespace ArduinoOTP
 
             foreach (char lletra in lletres)
             {
-                for (int i = 1; i <= 10; i++)
+                for (int i = 1; i <= 5; i++)
                 {
                     coordenada = $"{lletra}{i}";
 

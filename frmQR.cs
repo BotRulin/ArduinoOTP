@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using AForge.Video;
 using AForge.Video.DirectShow;
 using ZXing;
+using Utils;
 
 namespace ArduinoOTP
 {
@@ -23,11 +24,22 @@ namespace ArduinoOTP
 
         FilterInfoCollection filterInfoCollection;
         VideoCaptureDevice captureDevice;
+        bbdd bbddDatos = new bbdd();
+        DataSet dts = new DataSet();
 
         private void btnGenerateQR_Click(object sender, EventArgs e)
         {
             QRCodeGenerator qr = new QRCodeGenerator();
-            QRCodeData data = qr.CreateQrCode(txtQRCode.Text, QRCodeGenerator.ECCLevel.Q);
+            QRCodeData data = qr.CreateQrCode(txtUsername.Text, QRCodeGenerator.ECCLevel.Q);
+
+            // Luego, actualiza la tabla CodeChain
+            dts = bbddDatos.PortarPerConsulta($"SELECT * FROM CodeChain c WHERE c.idUser = (SELECT u.idUser FROM Users u WHERE '{txtUsername.Text.ToUpper()}' = UPPER(u.codeUser));");
+            foreach (DataRow row in dts.Tables[0].Rows)
+            {
+                row["CodeChain"] = txtCodeChain.Text;
+            }
+            bbddDatos.Actualitzar($"SELECT * FROM CodeChain c WHERE c.idUser = (SELECT u.idUser FROM Users u WHERE '{txtUsername.Text.ToUpper()}' = UPPER(u.codeUser));", dts);
+
             QRCode code = new QRCode(data);
             imgQR.Image = code.GetGraphic(5);
         }
@@ -85,24 +97,21 @@ namespace ArduinoOTP
             }
         }
 
-        private void pnlCamera_Paint(object sender, PaintEventArgs e)
+        private void txtQRCode_Validating(object sender, CancelEventArgs e)
         {
+            dts = bbddDatos.PortarPerConsulta($"SELECT descUser FROM Users u WHERE '{txtUsername.Text.ToUpper()}' = UPPER(u.codeUser);");
 
-        }
-
-        private void txtQRCode_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void imgQR_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void lblQRCode_Click(object sender, EventArgs e)
-        {
-
+            if (dts.Tables[0].Rows.Count > 0)
+            {
+                foreach (DataRow row in dts.Tables[0].Rows)
+                {
+                    txtUserDesc.Text = row["descUser"].ToString();
+                }
+            }
+            else
+            {
+                txtUserDesc.Text = ""; 
+            }
         }
     }
 }
